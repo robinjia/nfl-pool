@@ -2,50 +2,12 @@
 from lxml import html as lxml_html
 import urllib2
 
+import util
+
 # Enum for keeping track of home/away teams
 HOME_TEAM_WON = 0
 HOME_TEAM_LOST = 1
 NO_HOME_TEAM = 2  # Basically means this was the Super Bowl
-
-# Maps team names to abbreviations
-TEAM_NAMES_TO_ABBREVIATIONS = {
-  'Arizona Cardinals': 'ARI',
-  'Atlanta Falcons': 'ATL',
-  'Baltimore Ravens': 'BAL',
-  'Buffalo Bills': 'BUF',
-  'Carolina Panthers': 'CAR',
-  'Chicago Bears': 'CHI',
-  'Cincinnati Bengals': 'CIN',
-  'Cleveland Browns': 'CLE',
-  'Dallas Cowboys': 'DAL',
-  'Denver Broncos': 'DEN',
-  'Detroit Lions': 'DET',
-  'Green Bay Packers': 'GB',
-  'Houston Texans': 'HOU',
-  'Indianapolis Colts': 'IND',
-  'Jacksonville Jaguars': 'JAX',
-  'Kansas City Chiefs': 'KC',
-  'Miami Dolphins': 'MIA',
-  'Minnesota Vikings': 'MIN',
-  'New England Patriots': 'NE',
-  'New Orleans Saints': 'NO',
-  'New York Giants': 'NYG',
-  'New York Jets': 'NYJ',
-  'Oakland Raiders': 'OAK',
-  'Philadelphia Eagles': 'PHI',
-  'Pittsburgh Steelers': 'PIT',
-  'San Diego Chargers': 'SD',
-  'Seattle Seahawks': 'SEA',
-  'San Francisco 49ers': 'SF',
-  'St. Louis Rams': 'STL',
-  'Tampa Bay Buccaneers': 'TB',
-  'Tennessee Titans': 'TEN',
-  'Washington Redskins': 'WAS'
-}
-
-# List of team abbreviations, sorted alphabetically
-TEAM_ABBREVIATIONS = sorted([TEAM_NAMES_TO_ABBREVIATIONS[k]
-                             for k in TEAM_NAMES_TO_ABBREVIATIONS])
 
 class Game(object):
   """Represents one NFL game."""
@@ -71,9 +33,9 @@ class PastGame(Game):
   def ParseFromList(cls, table_row):
     """Parses object from the <td> elements in the <tr>."""
     week = table_row[0]
-    winning_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[4]]
+    winning_team = util.TEAM_NAMES_TO_ABBREVIATIONS[table_row[4]]
     home_or_away = _ParseHomeOrAway(table_row[5])
-    losing_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[6]]
+    losing_team = util.TEAM_NAMES_TO_ABBREVIATIONS[table_row[6]]
     winning_points = int(table_row[7])
     losing_points = int(table_row[8])
     return cls(week, winning_team, losing_team, home_or_away, winning_points,
@@ -95,8 +57,8 @@ class FutureGame(Game):
   def ParseFromList(cls, table_row):
     """Parses object from the <td> elements in the <tr>."""
     week = table_row[0]  # Don't convert to int, due to postseason
-    away_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[3]]
-    home_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[5]]
+    away_team = util.TEAM_NAMES_TO_ABBREVIATIONS[table_row[3]]
+    home_team = util.TEAM_NAMES_TO_ABBREVIATIONS[table_row[5]]
     return cls(week, home_team, away_team)
 
 

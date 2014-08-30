@@ -5,6 +5,7 @@ import test_utils
 import util
 
 class TestTableFunctions(unittest.TestCase):
+  # TODO(robinjia): Test parsing of a page with both past and future games.
 
   def setUp(self):
     self.past_html = test_utils.ReadTestdataFile('2013_past_season.html')

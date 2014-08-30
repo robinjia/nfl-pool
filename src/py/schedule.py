@@ -67,8 +67,10 @@ def _SchedulePredictionsToString(predictions, week):
   """Creates a string representation of predictions.
 
   Args:
-    predictions: Output of GetSchedulePredictions()
-    week: 
+    predictions: Output of GetSchedulePredictions().  This is a nested dict
+        mapping (team, week) pairs to the probability the given team will win
+        in the given week.
+    week: The week in which predictions start.
   Returns:
     String with one line per NFL team.
     Each line will have the team abbreviation and n numbers, where n is the
