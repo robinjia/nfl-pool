@@ -41,6 +41,7 @@ class TestTableFunctions(unittest.TestCase):
     # 16 regular season games for 32 teams / 2 teams per game.
     # No playoffs on page yet.
     self.assertEqual(32 * 16 / 2, len(games))
+
     
 if __name__ == '__main__':
   unittest.main()
