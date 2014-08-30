@@ -5,6 +5,7 @@ import json
 import sys
 
 import table
+import util
 
 # How much to weight games from last season compared to this season.
 LAST_SEASON_WEIGHT = .25
@@ -22,7 +23,7 @@ def _ReadArgs():
   return vars(parser.parse_args())
 
 
-def _ComputeTeamStrengths(cur_season_games, last_season_games):
+def GetTeamStrengths(year, week):
   """Computes estimates of team strengths, based on past performance.
 
   Uses games from both the current season and the last season.  Last season's
@@ -37,8 +38,8 @@ def _ComputeTeamStrengths(cur_season_games, last_season_games):
   for s_i.
 
   Args:
-    cur_season_games: Games from the current season that have been played.
-    last_season_games: Games from the previous season.
+    year: The current year.
+    week: Only use games before this week of the current year.
   Returns:
     JSON-like dictionary structured like: {
         'variance': var,
@@ -50,11 +51,14 @@ def _ComputeTeamStrengths(cur_season_games, last_season_games):
         }
     }
   """
+  last_season_games = table.FetchPastGames(year - 1)
+  cur_season_games = table.FetchPastGames(year)
+  # Only use regular season 
+  last_regular_season_games = last_season_games[:util.NUM_REGULAR_SEASON_GAMES]
+
   total_point_diff = collections.defaultdict(int)
   total_weighted_games = collections.defaultdict(int)
 
-  # Only use regular season 
-  last_regular_season_games = last_season_games[:table.NUM_REGULAR_SEASON_GAMES]
 
   for game in last_regular_season_games:
     differential = game.GetPointDifferential()
@@ -63,6 +67,9 @@ def _ComputeTeamStrengths(cur_season_games, last_season_games):
     total_point_diff[game.losing_team] -= LAST_SEASON_WEIGHT * differential
     total_weighted_games[game.losing_team] += LAST_SEASON_WEIGHT
   for game in cur_season_games:
+    if not game.week.isdigit() or int(game.week) >= week:
+      # Game is from post-season or is from current week or after
+      continue
     differential = game.GetPointDifferential()
     total_point_diff[game.winning_team] += differential
     total_weighted_games[game.winning_team] += 1
@@ -89,7 +96,7 @@ def _TeamStrengthsToString(team_strengths, output='json'):
   """Creates a string representation of team strengths.
   
   Args:
-    team_strengths: output of ComputeTeamStrengths()
+    team_strengths: Output of GetTeamStrengths()
     output: 'text' or 'json'
   Returns:
     String of appropriate format.  'json' works as expected.
@@ -112,11 +119,6 @@ def _TeamStrengthsToString(team_strengths, output='json'):
     raise ValueError('Unrecognized output format "%s".' % output)
 
 
-def GetTeamStrengths(year, week):
-  return _ComputeTeamStrengths(table.FetchPastGames(year),
-                               table.FetchPastGames(year - 1))
-
-  
 def _PrintTeamStrengths(year, week):
   """Prints out team strengths to stdout"""
   team_strengths = GetTeamStrengths(year, week)

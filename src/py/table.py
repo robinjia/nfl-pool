@@ -47,14 +47,6 @@ TEAM_NAMES_TO_ABBREVIATIONS = {
 TEAM_ABBREVIATIONS = sorted([TEAM_NAMES_TO_ABBREVIATIONS[k]
                              for k in TEAM_NAMES_TO_ABBREVIATIONS])
 
-# Constants for number of games in season
-# 16 regular season games for 32 teams / 2 teams per game
-NUM_REGULAR_SEASON_GAMES = 32 * 16 / 2
-# 12 teams make playoffs, single-elimination => 11 playoff games
-NUM_PLAYOFF_GAMES = 11
-NUM_TOTAL_GAMES = NUM_REGULAR_SEASON_GAMES + NUM_PLAYOFF_GAMES
-
-
 class Game(object):
   """Represents one NFL game."""
   @classmethod
@@ -66,8 +58,9 @@ class Game(object):
 class PastGame(Game):
   """Represents a game that has finished."""
 
-  def __init__(self, winning_team, losing_team, home_or_away, winning_points,
-               losing_points):
+  def __init__(self, week, winning_team, losing_team, home_or_away,
+               winning_points, losing_points):
+    self.week = week
     self.winning_team = winning_team
     self.losing_team = losing_team
     self.home_or_away = home_or_away
@@ -77,12 +70,13 @@ class PastGame(Game):
   @classmethod
   def ParseFromList(cls, table_row):
     """Parses object from the <td> elements in the <tr>."""
+    week = table_row[0]
     winning_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[4]]
     home_or_away = _ParseHomeOrAway(table_row[5])
     losing_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[6]]
     winning_points = int(table_row[7])
     losing_points = int(table_row[8])
-    return cls(winning_team, losing_team, home_or_away, winning_points,
+    return cls(week, winning_team, losing_team, home_or_away, winning_points,
                losing_points)
 
   def GetPointDifferential(self):
@@ -92,18 +86,18 @@ class PastGame(Game):
 class FutureGame(Game):
   """Represents a game that is scheduled for the future."""
 
-  def __init__(self, week, home_team, visiting_team):
+  def __init__(self, week, home_team, away_team):
     self.week = week
     self.home_team = home_team
-    self.visiting_team = visiting_team
+    self.away_team = away_team
 
   @classmethod
   def ParseFromList(cls, table_row):
     """Parses object from the <td> elements in the <tr>."""
     week = table_row[0]  # Don't convert to int, due to postseason
-    visiting_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[3]]
+    away_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[3]]
     home_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[5]]
-    return cls(week, home_team, visiting_team)
+    return cls(week, home_team, away_team)
 
 
 def _ParseHomeOrAway(symbol):
