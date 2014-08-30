@@ -1,6 +1,6 @@
 """Module for parsing tables from pro-football-reference.com"""
 from lxml import html as lxml_html
-import sys
+import urllib2
 
 # Enum for keeping track of home/away teams
 HOME_TEAM_WON = 0
@@ -43,6 +43,17 @@ TEAM_NAMES_TO_ABBREVIATIONS = {
   'Washington Redskins': 'WAS'
 }
 
+# List of team abbreviations, sorted alphabetically
+TEAM_ABBREVIATIONS = sorted([TEAM_NAMES_TO_ABBREVIATIONS[k]
+                             for k in TEAM_NAMES_TO_ABBREVIATIONS])
+
+# Constants for number of games in season
+# 16 regular season games for 32 teams / 2 teams per game
+NUM_REGULAR_SEASON_GAMES = 32 * 16 / 2
+# 12 teams make playoffs, single-elimination => 11 playoff games
+NUM_PLAYOFF_GAMES = 11
+NUM_TOTAL_GAMES = NUM_REGULAR_SEASON_GAMES + NUM_PLAYOFF_GAMES
+
 
 class Game(object):
   """Represents one NFL game."""
@@ -67,7 +78,7 @@ class PastGame(Game):
   def ParseFromList(cls, table_row):
     """Parses object from the <td> elements in the <tr>."""
     winning_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[4]]
-    home_or_away = ParseHomeOrAway(table_row[5])
+    home_or_away = _ParseHomeOrAway(table_row[5])
     losing_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[6]]
     winning_points = int(table_row[7])
     losing_points = int(table_row[8])
@@ -95,7 +106,7 @@ class FutureGame(Game):
     return cls(week, home_team, visiting_team)
 
 
-def ParseHomeOrAway(symbol):
+def _ParseHomeOrAway(symbol):
   """Parses the symbol that gives who was home/away."""
   if symbol == '':
     return HOME_TEAM_WON  
@@ -149,3 +160,18 @@ def ParseFutureGamesTable(html_body):
       continue
     games.append(FutureGame.ParseFromList(row))
   return games
+
+
+def MakeUrlForYear(year):
+  """Makes a URL for the page that contains games for the given year."""
+  return 'http://www.pro-football-reference.com/years/%d/games.htm' % year
+
+
+def FetchPastGames(year):
+  """Fetches past games from the given year."""
+  return ParsePastGamesTable(urllib2.urlopen(MakeUrlForYear(year)).read())
+
+
+def FetchFutureGames(year):
+  """Fetches future games from the given year."""
+  return ParseFutureGamesTable(urllib2.urlopen(MakeUrlForYear(year)).read())
