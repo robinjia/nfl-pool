@@ -81,9 +81,18 @@ class PastGame(Game):
 class FutureGame(Game):
   """Represents a game that is scheduled for the future."""
 
+  def __init__(self, week, home_team, visiting_team):
+    self.week = week
+    self.home_team = home_team
+    self.visiting_team = visiting_team
+
   @classmethod
   def ParseFromList(cls, table_row):
     """Parses object from the <td> elements in the <tr>."""
+    week = table_row[0]  # Don't convert to int, due to postseason
+    visiting_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[3]]
+    home_team = TEAM_NAMES_TO_ABBREVIATIONS[table_row[5]]
+    return cls(week, home_team, visiting_team)
 
 
 def ParseHomeOrAway(symbol):
@@ -130,14 +139,13 @@ def ParsePastGamesTable(html_body):
   return games
     
 
-
 def ParseFutureGamesTable(html_body):
   """Parses the table of upcoming games."""
-
-
-def main(argv):
-  pass
-
-
-if __name__ == '__main__':
-  main(sys.argv)
+  games = []
+  for row in TableRowsIter(html_body, 'games_left'):
+    if not row or not row[0]:
+      # Empty row contained only <th> elements, ignore.
+      # If row[0] is empty, this row just says "Playoffs"
+      continue
+    games.append(FutureGame.ParseFromList(row))
+  return games
