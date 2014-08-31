@@ -1,23 +1,36 @@
 CC=gcc
-CFLAGS=-c -Wall -O2
+CFLAGS=-c -std=c99 -Wall -Wstrict-prototypes -O2
 VPATH=src/c
 BUILD_DIR=build
+BINARIES=$(BUILD_DIR)/make-picks $(BUILD_DIR)/test/bitset-test $(BUILD_DIR)/test/picks-test
 
-all: checkdirs $(BUILD_DIR)/test/bitset_test Makefile
+all: checkdirs $(BINARIES) Makefile
 
 check: all
-	$(BUILD_DIR)/test/bitset_test
+	$(BUILD_DIR)/test/bitset-test
+	$(BUILD_DIR)/test/picks-test
+
+debug: CC += -DDEBUG -g -O0
+debug: all
 
 checkdirs: $(BUILD_DIR)/test
 
 $(BUILD_DIR)/test:
 	mkdir -p $(BUILD_DIR)/test
 
-$(BUILD_DIR)/test/bitset_test: $(BUILD_DIR)/bitset.o $(BUILD_DIR)/test/bitset_test.o
-	$(CC) $(BUILD_DIR)/bitset.o $(BUILD_DIR)/test/bitset_test.o -o $(BUILD_DIR)/test/bitset_test
+$(BUILD_DIR)/make-picks: $(BUILD_DIR)/make_picks.o $(BUILD_DIR)/picks.o $(BUILD_DIR)/predictions.o
+	$(CC) $(BUILD_DIR)/make_picks.o $(BUILD_DIR)/picks.o $(BUILD_DIR)/predictions.o -o $(BUILD_DIR)/make-picks
+
+$(BUILD_DIR)/test/picks-test: $(BUILD_DIR)/test/picks_test.o
+	$(CC) $(BUILD_DIR)/picks.o $(BUILD_DIR)/predictions.o $(BUILD_DIR)/test/picks_test.o -o $(BUILD_DIR)/test/picks-test
+
+$(BUILD_DIR)/test/bitset-test: $(BUILD_DIR)/test/bitset_test.o
+	$(CC) $(BUILD_DIR)/test/bitset_test.o -o $(BUILD_DIR)/test/bitset-test
 
 $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) $< -o $@
 
+.PHONY : clean
+
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BINARIES) $(BUILD_DIR)/*.o $(BUILD_DIR)/test/*.o

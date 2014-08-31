@@ -5,7 +5,14 @@
 
 #include "../bitset.h"
 
-void TestBasic(void) {
+/* Redefine number of teams to 4 */
+#define NUM_TEAMS 4
+
+/* Colors */
+#define KNRM  "\x1B[0m"
+#define KGRN  "\x1B[32m"
+
+void run_tests(void) {
   uint64_t a = bitset_insert(bitset_insert(bitset_insert(0, 0), 1), 2);
   uint64_t b = bitset_insert(bitset_insert(bitset_insert(0, 2), 3), 4);
   uint64_t c = bitset_difference(a, b);
@@ -23,7 +30,7 @@ void TestBasic(void) {
 }
 
 int main(int argc, char *argv[]) {
-  TestBasic();
-  printf("Bitset tests passed!\n");
+  run_tests();
+  printf("%sBitset tests passed!%s\n", KGRN, KNRM);
   return 0;
 }

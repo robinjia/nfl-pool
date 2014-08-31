@@ -79,7 +79,7 @@ def _SchedulePredictionsToString(predictions, week):
     alphabetical order.  Fields are delimited by the space character.
   """
   lines = []
-  for team in table.TEAM_ABBREVIATIONS:
+  for team in util.TEAM_ABBREVIATIONS:
     tokens = [team]
     for cur_week in range(week, util.NUM_WEEKS_PER_SEASON + 1):
       tokens.append('%g' % predictions[team][str(cur_week)])
