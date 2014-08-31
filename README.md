@@ -4,19 +4,22 @@ This is code that makes picks for an NFL Suicide Pool.
 Thanks to Renjie You for organizing this pool.
 
 # Basic Execution
-To run from a clean repo, do the following:
+From a clean repo, the following should generate a sequence of optimal picks:
 ```
 make
-./run.sh [year] [week]
+./make-picks [year] [week]
 ```
 
 For example, to make picks for the first week of the 2014 season, run
 ```
-./run.sh 2014 1
+./make-picks 2014 1
 ```
 
-You may have to install some depenecies for Python.
-These should all be available on pip.
+This will also create a file data/predictions_${year}_${week}.txt
+(e.g. data/predictions_2014_1.txt) that contains estimated winning
+probabilities for each team in each week.  The picks the program chooses are
+"optimal" in that they maximize expected win count, given these probabilities.
+Note that tiebreakers are not taken into account.
 
 # Tests:
 * Python tests
