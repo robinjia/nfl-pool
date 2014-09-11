@@ -1,5 +1,6 @@
 """Module for parsing tables from pro-football-reference.com"""
 from lxml import html as lxml_html
+import sys
 import urllib2
 
 import util
@@ -102,7 +103,10 @@ def ParsePastGamesTable(html_body):
       # Empty row contained only <th> elements, ignore.
       # If row[0] is empty, this row just says "Playoffs"
       continue
-    games.append(PastGame.ParseFromList(row))
+    try:
+      games.append(PastGame.ParseFromList(row))
+    except ValueError:
+      print >> sys.stderr, 'Could not parse row "%s"' % str(row)
   return games
     
 
