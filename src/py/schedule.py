@@ -48,7 +48,7 @@ def GetSchedulePredictions(year, week):
     A dict predictions where predictions[week][team] gives the win probability
     of that team to win in that week.
   """
-  team_strengths = teams.GetTeamStrengths(year, week)
+  team_strengths = teams.GetTeamStrengthsMLE(year, week)
 
   future_games = table.FetchFutureGames(year)
   predictions = collections.defaultdict(lambda: collections.defaultdict(float))
