@@ -50,7 +50,7 @@ def GetSchedulePredictions(year, week):
   """
   team_strengths = teams.GetTeamStrengthsMLE(year, week)
 
-  future_games = table.FetchFutureGames(year)
+  future_games = table.FetchFutureGames(year, week)
   predictions = collections.defaultdict(lambda: collections.defaultdict(float))
   for game in future_games:
     if not game.week.isdigit() or int(game.week) < week:

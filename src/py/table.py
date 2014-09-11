@@ -37,13 +37,31 @@ class PastGame(Game):
     winning_team = util.TEAM_NAMES_TO_ABBREVIATIONS[table_row[4]]
     home_or_away = _ParseHomeOrAway(table_row[5])
     losing_team = util.TEAM_NAMES_TO_ABBREVIATIONS[table_row[6]]
-    winning_points = int(table_row[7])
-    losing_points = int(table_row[8])
+    try:
+      winning_points = int(table_row[7])
+      losing_points = int(table_row[8])
+    except ValueError:
+      winning_points = None
+      losing_points = None
     return cls(week, winning_team, losing_team, home_or_away, winning_points,
                losing_points)
 
+  def IsValid(self):
+    return self.winning_points is not None and self.losing_points is not None
+  
   def GetPointDifferential(self):
     return self.winning_points - self.losing_points
+
+  def ToFutureGame(self):
+    """Converts a past game into a FutureGame object."""
+    if self.home_or_away == HOME_TEAM_WON:
+      home_team = self.winning_team
+      away_team = self.losing_team
+    else:
+      home_team = self.losing_team
+      away_team = self.winning_team
+    # TODO(robinjia): How should the Super Bowl be represented?
+    return FutureGame(self.week, home_team, away_team)
 
 
 class FutureGame(Game):
@@ -95,18 +113,26 @@ def TableRowsIter(html_body, table_id):
         yield(row)
 
 
-def ParsePastGamesTable(html_body):
-  """Parses the table of games that have been played."""
+def ParsePastGamesTable(html_body, future=False):
+  """Parses the table of games that have been played.
+
+  Args:
+    html_body: HTML string.
+    future: If True, will convert games to FutureGame objects
+  Returns: list of PastGame objects, or FutureGame objects if future == True
+  """
   games = []
   for row in TableRowsIter(html_body, 'games'):
     if not row or not row[0]:
       # Empty row contained only <th> elements, ignore.
       # If row[0] is empty, this row just says "Playoffs"
       continue
-    try:
-      games.append(PastGame.ParseFromList(row))
-    except ValueError:
-      print >> sys.stderr, 'Could not parse row "%s"' % str(row)
+    game = PastGame.ParseFromList(row)
+    if future:
+      games.append(game.ToFutureGame())
+    elif game.IsValid():
+      # Only append valid games here
+      games.append(game)
   return games
     
 
@@ -132,6 +158,18 @@ def FetchPastGames(year):
   return ParsePastGamesTable(urllib2.urlopen(MakeUrlForYear(year)).read())
 
 
-def FetchFutureGames(year):
-  """Fetches future games from the given year."""
-  return ParseFutureGamesTable(urllib2.urlopen(MakeUrlForYear(year)).read())
+def FetchPastGamesAsFuture(year):
+  """Fetches FutureGame objects for all past games of the given year."""
+  return ParsePastGamesTable(urllib2.urlopen(MakeUrlForYear(year)).read(),
+                             future=True)
+
+
+def FetchFutureGames(year, week):
+  """Fetches future games from the given year, starting at the given week."""
+  # Get games that are literally in the future
+  future_games = ParseFutureGamesTable(
+      urllib2.urlopen(MakeUrlForYear(year)).read())
+  # We may augment this with games from the past 
+  past_games = [game for game in FetchPastGamesAsFuture(year)
+                if game.week.isdigit() and int(game.week) >= week]
+  return past_games + future_games
