@@ -3,6 +3,11 @@
 This is code that makes picks for an NFL Suicide Pool.
 Thanks to Renjie You for organizing this pool.
 
+# Setup
+Most of this should run out of the box.  One important dependency you may not
+already have is cvxpy, which can be installed by following the instructions
+[here](http://cvxpy.readthedocs.org/en/latest/install/index.html).
+
 # Basic Execution
 From a clean repo, the following should generate a sequence of optimal picks:
 ```
