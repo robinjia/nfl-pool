@@ -14,6 +14,14 @@ float **predictions_allocate() {
   return games;
 }
 
+/* Frees a predictions table */
+void predictions_free(float **games) {
+  for (int i = 0; i < NUM_TEAMS; ++i) {
+    free(games[i]);
+  }
+  free(games);
+}
+
 /**
  * Reads games input from stdin
  *

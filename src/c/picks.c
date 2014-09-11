@@ -56,6 +56,14 @@ DpCell **picks_run_dp(int num_games, float **predictions) {
   return dp_table;
 }
 
+/* Frees the memeory of a dp table */
+void picks_free_table(DpCell **dp_table) {
+  for (int i = 0; i < NUM_TEAMS; ++i) {
+    free(dp_table[i]);
+  }  
+  free(dp_table);
+}
+
 /* Get the optimal sequence of picks, returns opt value. */
 float picks_get_opt(DpCell **dp_table, int num_games, int *pick_sequence) {
   // Start from the last cell.
@@ -96,5 +104,10 @@ void picks_run(char *filename, char *teams_to_avoid){
   int *pick_sequence = calloc(num_games, sizeof(int));
   float opt_val = picks_get_opt(dp_table, num_games, pick_sequence);
   picks_print(num_games, opt_val, pick_sequence, team_names);
+
+  // Cleanup
+  predictions_free(predictions);
+  free(pick_sequence);
+  picks_free_table(dp_table);
 }
 
