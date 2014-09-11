@@ -36,6 +36,6 @@ typedef struct DpCell {
 DpCell **picks_run_dp(int, float **);
 float picks_get_opt(DpCell **, int, int *);
 void picks_print(int, float, int *, char *);
-void picks_run(char *);
+void picks_run(char *, char *);
 
 #endif  // NFLPOOL_PICKS_H_

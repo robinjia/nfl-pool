@@ -87,10 +87,11 @@ void picks_print(int num_weeks, float opt_val, int *pick_sequence, char *names) 
 }
 
 /* Runs the pipeline to make picks based on game predictions. */
-void picks_run(char *filename){ 
+void picks_run(char *filename, char *teams_to_avoid){ 
   float **predictions = predictions_allocate();
   char team_names[NUM_TEAMS * 4];
-  int num_games = predictions_read(filename, predictions, team_names);
+  int num_games = predictions_read(filename, teams_to_avoid, predictions,
+                                   team_names);
   DpCell **dp_table = picks_run_dp(num_games, predictions);
   int *pick_sequence = calloc(num_games, sizeof(int));
   float opt_val = picks_get_opt(dp_table, num_games, pick_sequence);

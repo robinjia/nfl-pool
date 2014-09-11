@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,14 +19,20 @@ float **predictions_allocate() {
  *
  * Expected input is a bunch of lines like
  * ARI 0.2 0.7 ...
+ *
+ * teams_to_avoid should be a comma-separated list of team abbreviations to
+ * not pick e.g. they've been used already.  We'll set these winning
+ * probabilities artificially to -Inf.
  */
-int predictions_read(char *filename, float **predictions, char *names) {
+int predictions_read(char *filename, char *teams_to_avoid, float **predictions,
+                     char *names) {
   int cur_team = -1;
   int cur_game = 0;
   int num_games = 0;
   char buf[32];
   float prob;
 
+  /* Read the file of probabilities */
   FILE *fp = fopen(filename, "r");
   if (fp == NULL) {
     fprintf(stderr, "Could not open file %s.\n", filename);
@@ -43,6 +50,20 @@ int predictions_read(char *filename, float **predictions, char *names) {
       num_games = cur_game;
       cur_game = 0;
     }
+  }
+
+  /* Set rows for teams_to_avoid to -Inf */
+  char *team = strtok(teams_to_avoid, ",");
+  while (team != NULL) {
+    // Find the index of this team
+    for (int i = 0; i < NUM_TEAMS; ++i) {
+      if (strcmp(names + 4 * i, team) == 0) {
+        for (int j = 0; j < num_games; ++j) {
+          predictions[i][j] = -INFINITY;
+        }
+      }
+    }
+    team = strtok(NULL, ",");
   }
   return num_games;
 }
