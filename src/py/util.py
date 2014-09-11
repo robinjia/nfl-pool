@@ -47,3 +47,7 @@ TEAM_NAMES_TO_ABBREVIATIONS = {
 # List of team abbreviations, sorted alphabetically
 TEAM_ABBREVIATIONS = sorted([TEAM_NAMES_TO_ABBREVIATIONS[k]
                              for k in TEAM_NAMES_TO_ABBREVIATIONS])
+
+def GetTeamIndex(team):
+  """Returns the index of the team abbreviation in TEAM_ABBREVIATIONS."""
+  return TEAM_ABBREVIATIONS.index(team)
