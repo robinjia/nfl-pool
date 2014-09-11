@@ -34,3 +34,6 @@ To run all C tests, run
 ```
 make check
 ```
+
+# Data sources
+Data on past NFL games comes from <http://pro-football-reference.com>.
