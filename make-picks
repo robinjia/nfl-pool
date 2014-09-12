@@ -19,3 +19,4 @@ echo "Computing game outcome probabilities..." 1>&2
 python src/py/schedule.py $year $week > $filename
 echo "Determining optimal pick sequence..." 1>&2
 build/choose-picks $filename $used_teams
+build/compare-picks $filename $used_teams

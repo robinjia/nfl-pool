@@ -38,5 +38,6 @@ void picks_free_table(DpCell **);
 float picks_get_opt(DpCell **, int, int *);
 void picks_print(int, float, int *, char *);
 void picks_run(char *, char *);
+void picks_compare(char *, char *);
 
 #endif  // NFLPOOL_PICKS_H_
