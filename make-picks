@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 USAGE=$(cat <<EOF
 Use available data to make NFL Suicide Pool picks.
 
