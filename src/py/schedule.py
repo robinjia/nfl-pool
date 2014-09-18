@@ -34,7 +34,8 @@ def _PredictHomeTeamWinningProbability(home_team, away_team, team_strengths):
   """
   variance = team_strengths['variance']
   scores = team_strengths['scores']
-  return stats.norm.cdf((scores[home_team] - scores[away_team]) /
+  home_field = team_strengths['home_field']
+  return stats.norm.cdf((scores[home_team] - scores[away_team] + home_field) /
                         math.sqrt(variance))
 
 
