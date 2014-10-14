@@ -13,6 +13,15 @@ import util
 # How much to weight games from last season compared to this season.
 LAST_SEASON_WEIGHT = .25
 
+# Variance of margin of victory for a game.
+# Instead of estimating variance from the data,
+# we use a historical average, which should be more robust.
+# See http://www.pro-football-reference.com/about/win_prob.htm
+GAME_VARIANCE = 13.45 ** 2  
+
+# Variance of the prior distribution of team strengths
+PRIOR_VARIANCE = 7.0 ** 2
+
 def _ReadArgs():
   parser = argparse.ArgumentParser(description='Compute strengths of teams.  '
                                    'Prints results to stdout.')
@@ -117,6 +126,7 @@ def GetTeamStrengthsMLE(year, week):
   == More details ==
   We introduce the following notation:
     - n: number of games
+    - m: number of teams
     - h_i: home team in game i
     - a_i: away team in game i
     - d_i: (points scored by h_i) - (points scored by a_i) in game i
@@ -127,17 +137,23 @@ def GetTeamStrengthsMLE(year, week):
   Our overall log likelihood is simply
     ll = \sum_{i=1}^n w_i l_i,
   where w_i is the weight assigned to game i (either 1 or LAST_SEASON_WEIGHT).
-  
-  Due to the structure of l_i, we can find the optimal values of s and k by
-  solving a simple least squares problem that is independent of variance:
-    s*, k* = \argmin_{s, k} \sum_{i=1}^n w_i (s_{h_i} - s_{a_i} + k - d_i)^2.
-  
-  Once these are computed, the optimal variance has the natural closed form
-    sigma_sq* = (\sum_{i=1}^n w_i (s*_{h_i} - s*_{a_i} + k - d_i)^2)/
-                (\sum_{i=1}^n w_i).
-  Note that the numerator is just the optimal objective value for the least
-  squares problem.
 
+  We use GAME_VARIANCE as a fixed variance sigma_Sq, instead of estimating it
+  from the data, as it should be better approximated by historical data.
+
+  We also add an L2 regularization term, to avoid making teams too good or too
+  bad.  This effectively puts a Gaussian prior on the team strengths.  For
+  each team j, we add a penalty 
+    s_{j}^2 / (2 * PRIOR_VARIANCE),
+  which corresponds to a prior distribution of mean 0 and variance 
+  PRIOR_VARIANCE.
+
+  We can find the optimal MAP estimators of s and k by
+  solving a simple least squares problem:
+    s*, k* = \argmin_{s, k} 1/(2 sigma_sq) \sum_{i=1}^n w_i (s_{h_i} - s_{a_i} + k - d_i)^2
+                            + 1/(2 PRIOR_VARIANCE) \sum_{j=1}^m. s_{j} s_j^2
+  
+  
   Args:
     year: The current year.
     week: Only use games before this week of the current year.
@@ -156,14 +172,6 @@ def GetTeamStrengthsMLE(year, week):
   # Set up the variables for the least squares problem.
   s = cvxpy.Variable(util.NUM_TEAMS)
   k = cvxpy.Variable()
-
-  # Set up constraints.
-  # The MLE is not unique, as adding any constant to each s_i does not change
-  # likelihood.  We therefore enforce this normalization, which states that the
-  # average s_i over all teams is 0.  With this normalization, we can interpret
-  # s_i as the expected margin of victory for team i when playing against an
-  # opponent chosen uniformly at random.
-  constraints = [sum(s) == 0]
 
   # Set up the least squares objective
   obj_fn = 0
@@ -184,19 +192,23 @@ def GetTeamStrengthsMLE(year, week):
     else:  # Super Bowl, no home team
       error = s[winning_index] - s[losing_index] - point_diff
     obj_fn += weight * cvxpy.square(error)
+
+  # Add L2 Regularization
+  # Note: cvxpy had issues when we divided by 2 * variance
+  # So instead, the previous terms were not scaled by variance,
+  # and we scale this by GAME_VARIANCE / PRIOR_VARIANCE > 1.
+  for i in range(util.NUM_TEAMS):
+    obj_fn += GAME_VARIANCE / PRIOR_VARIANCE * cvxpy.square(s[i])
   objective = cvxpy.Minimize(obj_fn)
 
   # Solve the least squares problem
-  problem = cvxpy.Problem(objective, constraints)
+  problem = cvxpy.Problem(objective)
   opt_squared_error = problem.solve()
-
-  # Compute variance
-  sigma_sq = opt_squared_error / sum(weights)
 
   # Return JSON-like object
   # To really make it JSON-like, convert numpy arrays returned by cvxpy to float
   return {
-      'variance': sigma_sq,
+      'variance': GAME_VARIANCE,
       'home_field': float(k.value), 
       'scores': collections.OrderedDict(
           itertools.izip(util.TEAM_ABBREVIATIONS, (float(x) for x in s.value)))
